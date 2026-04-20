@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BioForge – AI Bio Generator</title>
+  <meta name="description" content="Generate stunning LinkedIn and Instagram bios instantly with AI. Free bio generator for professionals and creators."/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --accent: #e8c97e;
+      --accent2: #c49a3c;
+      --text: #f0ece4;
+      --muted: #7a7570;
+      --radius: 14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE TEXTURE OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ─── AMBIENT GLOW ─── */
+    .glow {
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,201,126,0.08) 0%, transparent 70%);
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--text); font-weight: 400; }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      margin-left: 24px;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--text); }
+
+    /* ─── AD BANNER ─── */
+    .ad-banner {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      position: relative; z-index: 10;
+    }
+    .ad-banner .ad-slot {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 8px 24px;
+      min-width: 728px;
+      max-width: 100%;
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+    @media(max-width:768px){ .ad-banner .ad-slot { min-width: unset; width: 100%; } }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative; z-index: 10;
+      text-align: center;
+      padding: 72px 24px 48px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(232,201,126,0.1);
+      border: 1px solid rgba(232,201,126,0.25);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+      position: relative;
+    }
+
+    h1 em::after {
+      content: '';
+      position: absolute;
+      bottom: 4px; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      opacity: 0.4;
+      border-radius: 2px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 520px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    /* ─── STATS ROW ─── */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 56px;
+      flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    /* ─── MAIN CARD ─── */
+    .card {
+      position: relative; z-index: 10;
+      max-width: 760px;
+      margin: 0 auto 48px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+    }
+
+    @media(max-width:600px){ .card { padding: 24px 20px; margin: 0 16px 40px; } }
+
+    /* ─── TABS ─── */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      background: var(--bg);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab.active {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .tab-icon { font-size: 1rem; }
+
+    /* ─── FORM ─── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media(max-width:560px){ .form-grid { grid-template-columns: 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    input, textarea, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 12px 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      width: 100%;
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.6; }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(232,201,126,0.5);
+      box-shadow: 0 0 0 3px rgba(232,201,126,0.08);
+    }
+
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+    select option { background: var(--surface2); }
+
+    /* ─── TONE PILLS ─── */
+    .tone-label { font-size: 0.78rem; font-weight: 600; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 8px; }
+    .tone-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.18s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+    .pill.selected {
+      background: rgba(232,201,126,0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ─── GENERATE BUTTON ─── */
+    .btn-generate {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      background: var(--accent);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-generate:hover:not(:disabled) {
+      background: #f0d68e;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(232,201,126,0.3);
+    }
+
+    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ─── SPINNER ─── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #0d0d0d;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .loading .spinner { display: block; }
+    .loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── OUTPUT ─── */
+    .output-section {
+      display: none;
+      margin-top: 32px;
+    }
+
+    .output-section.visible { display: block; animation: fadeUp 0.4s ease; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .output-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .btn-copy {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-copy.copied { border-color: #4caf50; color: #4caf50; }
+
+    .bio-result {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .variants-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .variant-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .variant-card:hover { border-color: rgba(232,201,126,0.4); }
+    .variant-card.selected-variant { border-color: var(--accent); }
+    .variant-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .variant-text { font-size: 0.9rem; line-height: 1.7; color: var(--text); }
+    .variant-copy {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.18s;
+      opacity: 0;
+    }
+    .variant-card:hover .variant-copy { opacity: 1; }
+    .variant-copy:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* ─── DIVIDER AD ─── */
+    .ad-mid {
+      position: relative; z-index: 10;
+      max-width: 760px;
+      margin: 0 auto 48px;
+      text-align: center;
+    }
+    .ad-mid-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+    .ad-mid-slot {
+      display: block;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px 24px;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    .section {
+      position: relative; z-index: 10;
+      max-width: 760px;
+      margin: 0 auto 64px;
+      padding: 0 24px;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 32px;
+      letter-spacing: -0.5px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media(max-width:600px){ .steps { grid-template-columns: 1fr; } }
+
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .step-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: rgba(232,201,126,0.2);
+      margin-bottom: 12px;
+      line-height: 1;
+    }
+
+    .step-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+    .step-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* ─── FAQ ─── */
+    .faq { display: flex; flex-direction: column; gap: 12px; }
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 18px 20px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-chevron { transition: transform 0.25s; color: var(--muted); font-size: 1.1rem; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      font-size: 0.85rem; color: var(--muted); line-height: 1.7;
+      padding: 0 20px;
+      transition: max-height 0.3s ease, padding 0.3s;
+    }
+    .faq-item.open .faq-a { max-height: 300px; padding: 0 20px 18px; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      position: relative; z-index: 10;
+      border-top: 1px solid var(--border);
+      padding: 32px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-logo { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--accent); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--muted); font-size: 0.8rem; text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { color: var(--muted); font-size: 0.78rem; }
+
+    /* ─── ERROR ─── */
+    .error-msg {
+      display: none;
+      background: rgba(220,53,69,0.1);
+      border: 1px solid rgba(220,53,69,0.3);
+      border-radius: 10px;
+      color: #ff8a8a;
+      font-size: 0.85rem;
+      padding: 12px 16px;
+      margin-top: 12px;
+    }
+    .error-msg.visible { display: block; }
+
+    /* ─── REWARDED AD OVERLAY ─── */
+    .ad-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .ad-overlay.show {
+      display: flex;
+      animation: overlayIn 0.3s ease;
+    }
+    @keyframes overlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .ad-popup {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 32px 32px;
+      text-align: center;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+      animation: popupUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      position: relative;
+    }
+    @keyframes popupUp {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .ad-popup-icon {
+      font-size: 2.8rem;
+      margin-bottom: 16px;
+      display: block;
+      line-height: 1;
+    }
+
+    .ad-popup h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .ad-popup p {
+      color: var(--muted);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .ad-popup p strong { color: var(--accent); }
+
+    /* ─── AD FRAME AREA ─── */
+    .ad-frame {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ad-frame-label {
+      font-size: 0.62rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      position: absolute;
+      top: 10px; right: 12px;
+    }
+
+    .ad-frame-text {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ─── PROGRESS RING ─── */
+    .progress-ring-wrap {
+      position: relative;
+      width: 64px; height: 64px;
+      margin: 0 auto 8px;
+    }
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+    .progress-ring-bg {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 4;
+    }
+    .progress-ring-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 163;
+      stroke-dashoffset: 163;
+      transition: stroke-dashoffset 1s linear;
+    }
+    .progress-ring-count {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* ─── POPUP BUTTONS ─── */
+    .btn-watch {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-watch:hover:not(:disabled) {
+      background: #f0d68e;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(232,201,126,0.3);
+    }
+    .btn-watch:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-skip-ad {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 8px;
+      transition: color 0.2s;
+      width: 100%;
+    }
+    .btn-skip-ad:hover { color: var(--text); }
+    .btn-skip-ad:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* states */
+    .ad-popup.watching .btn-watch { display: none; }
+    .ad-popup.done .ad-frame { border-color: rgba(76,175,80,0.4); }
+    .ad-popup.done .progress-ring-fill { stroke: #4caf50; }
+    .ad-popup.done .progress-ring-count { color: #4caf50; }
+
+    .ad-done-msg {
+      display: none;
+      color: #4caf50;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .ad-popup.done .ad-done-msg { display: block; }
+    .ad-popup.done .ad-frame-text { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="glow"></div>
+
+<!-- ═══ REWARDED AD OVERLAY ═══ -->
+<div class="ad-overlay" id="adOverlay">
+  <div class="ad-popup" id="adPopup">
+    <span class="ad-popup-icon">🎬</span>
+    <h2>One quick ad</h2>
+    <p>BioForge is completely free — watch a <strong>short ad</strong> to unlock your AI-generated bio.</p>
+
+    <!-- AD DISPLAY AREA -->
+    <div class="ad-frame" id="adFrame">
+      <span class="ad-frame-label">Advertisement</span>
+
+      <!-- ══════════════════════════════════════════
+           PASTE YOUR REWARDED AD CODE HERE
+           e.g. Monetag / Google Ad Manager tag
+           ══════════════════════════════════════════ -->
+      <div id="rewardedAdSlot">
+        <!-- Placeholder: replace with real ad tag -->
+        <div style="font-size:2rem; margin-bottom:8px;">📺</div>
+      </div>
+      <!-- ════════════════════════════════════════ -->
+
+      <div class="progress-ring-wrap" id="progressWrap">
+        <svg class="progress-ring" width="64" height="64" viewBox="0 0 64 64">
+          <circle class="progress-ring-bg" cx="32" cy="32" r="26"/>
+          <circle class="progress-ring-fill" id="progressFill" cx="32" cy="32" r="26"/>
+        </svg>
+        <div class="progress-ring-count" id="countdown">5</div>
+      </div>
+      <div class="ad-frame-text" id="adWatchMsg">Watch for <span id="secLeft">5</span>s to unlock</div>
+      <div class="ad-done-msg">✓ Reward unlocked!</div>
+    </div>
+
+    <button class="btn-watch" id="btnWatchAd" onclick="startWatchingAd()">
+      ▶ Watch Ad &amp; Generate
+    </button>
+    <button class="btn-skip-ad" id="btnSkipAd" disabled onclick="closeAdAndGenerate()">
+      Skip not available yet
+    </button>
+  </div>
+</div>
+
+<!-- AD: TOP BANNER -->
+<div class="ad-banner">
+  <div class="ad-slot">
+    <!-- Google AdSense: Replace with your ad code -->
+    Advertisement · 728×90 Leaderboard
+  </div>
+</div>
+
+<header>
+  <div class="logo">Bio<span>Forge</span></div>
+  <nav>
+    <a href="#how">How it works</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-badge">✦ Powered by Claude AI</div>
+    <h1>Your bio,<br/><em>brilliantly</em> written.</h1>
+    <p>Stop staring at a blank box. Fill in a few details and get a polished, professional bio in seconds — for LinkedIn, Instagram, Twitter, and more.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-num">50K+</div><div class="stat-label">Bios Generated</div></div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label">Platforms Supported</div></div>
+      <div class="stat"><div class="stat-num">Free</div><div class="stat-label">Always</div></div>
+    </div>
+  </section>
+
+  <div class="card">
+    <!-- PLATFORM TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="setTab(this, 'linkedin')">
+        <span class="tab-icon">💼</span> LinkedIn
+      </button>
+      <button class="tab" onclick="setTab(this, 'instagram')">
+        <span class="tab-icon">📸</span> Instagram
+      </button>
+      <button class="tab" onclick="setTab(this, 'twitter')">
+        <span class="tab-icon">🐦</span> Twitter / X
+      </button>
+      <button class="tab" onclick="setTab(this, 'general')">
+        <span class="tab-icon">✍️</span> General
+      </button>
+    </div>
+
+    <!-- FORM: dynamic per platform -->
+    <div id="formContainer"></div>
+
+    <div class="tone-label">Tone</div>
+    <div class="tone-pills">
+      <button class="pill selected" onclick="setTone(this)">Professional</button>
+      <button class="pill" onclick="setTone(this)">Witty</button>
+      <button class="pill" onclick="setTone(this)">Bold</button>
+      <button class="pill" onclick="setTone(this)">Humble</button>
+      <button class="pill" onclick="setTone(this)">Creative</button>
+      <button class="pill" onclick="setTone(this)">Minimalist</button>
+    </div>
+
+    <button class="btn-generate" id="generateBtn" onclick="showAdPopup()">
+      <div class="spinner"></div>
+      <span class="btn-text">✦ Generate My Bio</span>
+    </button>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- OUTPUT -->
+    <div class="output-section" id="outputSection">
+      <div class="output-header">
+        <div class="output-title">Your Generated Bios</div>
+      </div>
+      <div class="variants-grid" id="variantsGrid"></div>
+    </div>
+  </div>
+
+  <!-- AD: MID PAGE -->
+  <div class="ad-mid">
+    <div class="ad-mid-label">Advertisement</div>
+    <div class="ad-mid-slot">
+      <!-- Google AdSense: Replace with your 300×250 or 336×280 ad code -->
+      Ad Slot · 300×250 Rectangle
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <div class="section-title">How it works</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Pick your platform</div>
+        <div class="step-desc">Choose LinkedIn, Instagram, Twitter, or a general bio. Each is optimized for character limits and audience expectations.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Fill the form</div>
+        <div class="step-desc">Tell us who you are, what you do, and what tone fits you. Takes under 60 seconds.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Copy & use</div>
+        <div class="step-desc">Get 3 polished bio variants. Pick your favorite, one-click copy, done.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="section-title">Frequently asked</div>
+    <div class="faq">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Is BioForge free to use? <span class="faq-chevron">⌄</span></button>
+        <div class="faq-a">Yes, completely free. Generate as many bios as you need with no account required.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can I use the bios commercially? <span class="faq-chevron">⌄</span></button>
+        <div class="faq-a">Absolutely. The bios you generate are yours to use however you like — profiles, websites, marketing materials, anything.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">How is BioForge different from ChatGPT? <span class="faq-chevron">⌄</span></button>
+        <div class="faq-a">BioForge is purpose-built for bios. It knows the right length, structure, and style for each platform and gives you 3 ready-to-use variants instantly — no prompt engineering needed.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What if I don't like the results? <span class="faq-chevron">⌄</span></button>
+        <div class="faq-a">Just hit generate again — the AI will produce a fresh set of bios each time. You can also adjust your tone or tweak your description for different results.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- AD: FOOTER BANNER -->
+<div class="ad-banner" style="border-top:1px solid var(--border); border-bottom:none; margin-bottom:0;">
+  <div class="ad-slot">
+    <!-- Google AdSense: Replace with your ad code -->
+    Advertisement · 728×90 Leaderboard
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">BioForge</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+  <div class="footer-copy">© 2026 BioForge. All rights reserved.</div>
+</footer>
+
+<script>
+  let currentPlatform = 'linkedin';
+  let currentTone = 'Professional';
+
+  // ─── PLATFORM FIELD DEFINITIONS ───
+  const platformFields = {
+    linkedin: [
+      { id: 'name',     label: 'Your Name',              placeholder: 'e.g. Priya Sharma',                     half: true },
+      { id: 'role',     label: 'Job Title / Headline',   placeholder: 'e.g. Product Designer at Swiggy',       half: true },
+      { id: 'description', label: 'About you (in your words)', placeholder: 'e.g. I help startups build products users love. 5+ years in UX, ex-Swiggy, now freelancing.', textarea: true },
+      { id: 'industry', label: 'Industry',               placeholder: 'e.g. Tech, Finance, Healthcare',         half: true },
+      { id: 'skills',   label: 'Top Skills / Achievements', placeholder: 'e.g. UX Research, Figma, $2M raised', half: true },
+    ],
+    instagram: [
+      { id: 'name',     label: 'Your Name / Handle',     placeholder: 'e.g. @priya.designs',                   half: true },
+      { id: 'role',     label: 'What you do',            placeholder: 'e.g. UI Designer & Content Creator',    half: true },
+      { id: 'description', label: 'Your vibe / niche',  placeholder: 'e.g. Sharing daily design tips, behind-the-scenes freelance life & aesthetic inspiration.', textarea: true },
+      { id: 'industry', label: 'Content Niche',          placeholder: 'e.g. Design, Fitness, Travel, Food',    half: true },
+      { id: 'skills',   label: 'CTA / Link text',        placeholder: 'e.g. DM for collabs | Free guide below', half: true },
+    ],
+    twitter: [
+      { id: 'name',     label: 'Your Name / Handle',     placeholder: 'e.g. @priya_ux',                        half: true },
+      { id: 'role',     label: 'What you do',            placeholder: 'e.g. Product Designer',                 half: true },
+      { id: 'description', label: 'Your personality / what you tweet about', placeholder: 'e.g. Design, startups, hot takes on tech. Occasional dad jokes.', textarea: true },
+      { id: 'industry', label: 'Topics you cover',       placeholder: 'e.g. AI, SaaS, Career growth',          half: true },
+      { id: 'skills',   label: 'One liner / fun fact',   placeholder: 'e.g. Ex-Google. Now building in public.', half: true },
+    ],
+    general: [
+      { id: 'name',     label: 'Your Name',              placeholder: 'e.g. Priya Sharma',                     half: true },
+      { id: 'role',     label: 'Your Role / Title',      placeholder: 'e.g. Freelance Designer & Consultant',  half: true },
+      { id: 'description', label: 'What you do & for whom', placeholder: 'e.g. I help early-stage startups craft brand identities that convert. Based in Bangalore.', textarea: true },
+      { id: 'industry', label: 'Industry / Field',       placeholder: 'e.g. Creative, Legal, Education',       half: true },
+      { id: 'skills',   label: 'Notable achievements',   placeholder: 'e.g. Featured in Forbes, 50+ clients',  half: true },
+    ],
+  };
+
+  function renderForm(platform) {
+    const container = document.getElementById('formContainer');
+    const fields = platformFields[platform];
+
+    // Save existing values before re-render
+    const saved = {};
+    container.querySelectorAll('input, textarea').forEach(el => { saved[el.id] = el.value; });
+
+    container.style.opacity = '0';
+    container.style.transform = 'translateY(6px)';
+
+    setTimeout(() => {
+      let html = '<div class="form-grid">';
+      fields.forEach(f => {
+        const fullClass = f.textarea || !f.half ? ' full' : '';
+        html += `<div class="field${fullClass}">`;
+        html += `<label>${f.label}</label>`;
+        if (f.textarea) {
+          html += `<textarea id="${f.id}" placeholder="${f.placeholder}"></textarea>`;
+        } else {
+          html += `<input type="text" id="${f.id}" placeholder="${f.placeholder}" />`;
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+
+      // Restore saved values
+      Object.keys(saved).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && saved[id]) el.value = saved[id];
+      });
+
+      container.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      container.style.opacity = '1';
+      container.style.transform = 'translateY(0)';
+    }, 150);
+  }
+
+  function setTab(el, platform) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    currentPlatform = platform;
+    renderForm(platform);
+
+    // Hide previous output when switching tabs
+    document.getElementById('outputSection').classList.remove('visible');
+  }
+
+  function setTone(el) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+    currentTone = el.textContent;
+  }
+
+  function toggleFaq(btn) {
+    btn.closest('.faq-item').classList.toggle('open');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function hideError() {
+    document.getElementById('errorMsg').classList.remove('visible');
+  }
+
+  function getFieldValues() {
+    const out = {};
+    ['name','role','description','industry','skills'].forEach(id => {
+      const el = document.getElementById(id);
+      out[id] = el ? el.value.trim() : '';
+    });
+    return out;
+  }
+
+  async function generateBio() {
+    const f = getFieldValues();
+
+    if (!f.role && !f.description) {
+      showError('Please fill in at least your role or a short description.');
+      return;
+    }
+
+    hideError();
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    const platformInstructions = {
+      linkedin: 'LinkedIn About section (3–5 sentences, professional, achievement-forward, ~300–500 characters)',
+      instagram: 'Instagram bio (max 150 characters — punchy, can use line breaks and emojis, personality-forward)',
+      twitter: 'Twitter/X bio (max 160 characters — sharp, witty, immediately memorable)',
+      general: 'General purpose bio (2–3 sentences, versatile, suitable for a website or portfolio About page)'
+    };
+
+    const fieldLabels = platformFields[currentPlatform];
+    const fieldSummary = fieldLabels.map(f2 => {
+      const val = f[f2.id] || 'Not provided';
+      return `${f2.label}: ${val}`;
+    }).join('\n');
+
+    const prompt = `You are an expert personal branding copywriter specializing in ${currentPlatform}.
+
+Generate exactly 3 distinct bio variants.
+
+Platform: ${platformInstructions[currentPlatform]}
+Tone: ${currentTone}
+
+User details:
+${fieldSummary}
+
+Return ONLY a JSON array (no markdown, no backticks, no extra text):
+[
+  {"label": "Variant A", "bio": "..."},
+  {"label": "Variant B", "bio": "..."},
+  {"label": "Variant C", "bio": "..."}
+]
+
+Rules:
+- Strictly match the platform's character limit and format
+- Each variant must feel genuinely ${currentTone.toLowerCase()}, not generic
+- Each must be meaningfully different in angle, structure, or hook
+- Ready to copy-paste immediately`;
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'API error');
+
+      const variants = data.variants;
+      renderVariants(variants);
+
+    } catch (err) {
+      showError('Something went wrong. Please try again in a moment.');
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  }
+
+  function renderVariants(variants) {
+    const grid = document.getElementById('variantsGrid');
+    grid.innerHTML = '';
+
+    variants.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'variant-card';
+      const safeText = escapeHtml(v.bio);
+      const jsText = escapeJs(v.bio);
+      card.innerHTML = `
+        <div class="variant-label">${v.label}</div>
+        <div class="variant-text">${safeText}</div>
+        <button class="variant-copy" onclick="copyText(this, \`${jsText}\`)">Copy</button>
+      `;
+      grid.appendChild(card);
+    });
+
+    const section = document.getElementById('outputSection');
+    section.classList.add('visible');
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function copyText(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.style.color = '#4caf50';
+      btn.style.borderColor = '#4caf50';
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 2000);
+    });
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function escapeJs(str) {
+    return str.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+  }
+
+  // ─── REWARDED AD LOGIC ───
+  const AD_DURATION = 5; // seconds — change to 15 or 30 for real ads
+  let adTimer = null;
+  let adWatched = false;
+
+  function showAdPopup() {
+    const f = getFieldValues();
+    if (!f.role && !f.description) {
+      showError('Please fill in at least your role or a short description.');
+      return;
+    }
+    hideError();
+
+    // Reset popup state
+    const popup = document.getElementById('adPopup');
+    popup.classList.remove('watching', 'done');
+    document.getElementById('countdown').textContent = AD_DURATION;
+    document.getElementById('secLeft').textContent = AD_DURATION;
+    document.getElementById('progressFill').style.strokeDashoffset = 163;
+    document.getElementById('btnWatchAd').style.display = 'flex';
+    document.getElementById('btnWatchAd').disabled = false;
+    document.getElementById('btnSkipAd').disabled = true;
+    document.getElementById('btnSkipAd').textContent = 'Skip not available yet';
+    adWatched = false;
+
+    document.getElementById('adOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function startWatchingAd() {
+    const popup  = document.getElementById('adPopup');
+    const fill   = document.getElementById('progressFill');
+    const count  = document.getElementById('countdown');
+    const secEl  = document.getElementById('secLeft');
+    const skipBtn = document.getElementById('btnSkipAd');
+    const watchBtn = document.getElementById('btnWatchAd');
+
+    popup.classList.add('watching');
+    watchBtn.style.display = 'none';
+
+    // ── TRIGGER YOUR REAL REWARDED AD SDK HERE ──
+    // e.g. Monetag: show_9105191(); 
+    // e.g. Google Ad Manager rewarded: googletag.pubads().refresh([rewardedSlot]);
+    // ────────────────────────────────────────────
+
+    let remaining = AD_DURATION;
+    const circumference = 163;
+
+    adTimer = setInterval(() => {
+      remaining--;
+      const progress = (AD_DURATION - remaining) / AD_DURATION;
+      fill.style.strokeDashoffset = circumference * (1 - progress);
+      count.textContent = remaining;
+      secEl.textContent = remaining;
+
+      if (remaining <= 0) {
+        clearInterval(adTimer);
+        adWatched = true;
+        popup.classList.add('done');
+        skipBtn.disabled = false;
+        skipBtn.textContent = '✓ Claim reward & generate bio';
+        count.textContent = '✓';
+      }
+    }, 1000);
+  }
+
+  function closeAdAndGenerate() {
+    if (!adWatched) return;
+    clearInterval(adTimer);
+    document.getElementById('adOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+    generateBio();
+  }
+
+  // Close overlay if clicking backdrop (only after reward)
+  document.getElementById('adOverlay').addEventListener('click', function(e) {
+    if (e.target === this && adWatched) closeAdAndGenerate();
+  });
+
+  // Init form on load
+  renderForm('linkedin');
+</script>
+</body>
+</html>
